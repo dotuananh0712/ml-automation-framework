@@ -72,9 +72,7 @@ logs/
 Thumbs.db
 
 # Claude Code local files
-.claude/settings.local.json
-.claude/user-team-info.json
-.claude/tasks/
+.claude/
 CLAUDE.local.md
 CLAUDE.md
 
