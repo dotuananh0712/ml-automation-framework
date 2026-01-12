@@ -1,0 +1,54 @@
+# Data Validation Test - Test Case 4
+# Tests: Great Expectations data validation
+
+name: manual_test_validation
+description: Classification with data validation
+pipeline_type: classification
+
+data:
+  source: tests/manual/data/churn_train.parquet
+  format: parquet
+  target_column: churn
+  feature_columns:
+    - age
+    - tenure_months
+    - monthly_charges
+    - total_charges
+  train_ratio: 0.8
+  validation_ratio: 0.1
+
+data_validation:
+  enabled: true
+  fail_on_error: true
+  generate_data_docs: true
+  min_rows: 100
+  expectations:
+    - column: age
+      expectation: expect_column_values_to_not_be_null
+    - column: age
+      expectation: expect_column_values_to_be_between
+      kwargs:
+        min_value: 0
+        max_value: 120
+    - column: tenure_months
+      expectation: expect_column_values_to_be_between
+      kwargs:
+        min_value: 0
+        max_value: 100
+    - column: contract_type
+      expectation: expect_column_values_to_be_in_set
+      kwargs:
+        value_set:
+          - "Month-to-month"
+          - "One year"
+          - "Two year"
+
+model:
+  model_type: random_forest
+  hyperparameters:
+    n_estimators: 30
+    max_depth: 5
+
+mlflow:
+  experiment_name: /manual_tests/with_validation
+  log_model: true

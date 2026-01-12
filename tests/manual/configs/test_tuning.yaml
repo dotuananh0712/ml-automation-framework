@@ -1,0 +1,53 @@
+# Hyperparameter Tuning Test - Test Case 6
+# Tests: Optuna hyperparameter optimization
+
+name: manual_test_tuning
+description: Classification with Optuna hyperparameter tuning
+pipeline_type: classification
+
+data:
+  source: tests/manual/data/churn_train.parquet
+  format: parquet
+  target_column: churn
+  feature_columns:
+    - age
+    - tenure_months
+    - monthly_charges
+    - total_charges
+  train_ratio: 0.7
+  validation_ratio: 0.15
+
+features:
+  numeric_impute_strategy: median
+  numeric_scaling: standard
+
+model:
+  model_type: xgboost
+  hyperparameters: {}  # Will be filled by tuner
+
+tuning:
+  enabled: true
+  n_trials: 10
+  direction: maximize
+  metric: val_f1
+  sampler: tpe
+  pruner: median
+  log_all_trials: true
+  register_best_model: true
+  search_space:
+    - name: n_estimators
+      type: int
+      low: 20
+      high: 100
+    - name: max_depth
+      type: int
+      low: 2
+      high: 8
+    - name: learning_rate
+      type: log_float
+      low: 0.01
+      high: 0.3
+
+mlflow:
+  experiment_name: /manual_tests/tuning
+  log_model: true

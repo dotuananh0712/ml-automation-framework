@@ -1,0 +1,79 @@
+# Churn Prediction Pipeline Configuration
+# This config demonstrates a classification pipeline for customer churn prediction
+
+name: customer_churn_prediction
+description: Predict customer churn using historical behavior data
+pipeline_type: classification
+
+data:
+  # Data source - supports local paths, DBFS, or Unity Catalog tables
+  source: "data/churn_dataset.parquet"  # Local
+  # source: "dbfs:/mnt/data/churn_dataset"  # Databricks DBFS
+  # source: "ml_catalog.churn.training_data"  # Unity Catalog
+  format: parquet
+
+  # Target and features
+  target_column: is_churned
+  feature_columns:  # Optional - auto-detect if not specified
+    - tenure_months
+    - monthly_charges
+    - total_charges
+    - contract_type
+    - payment_method
+    - internet_service
+    - num_support_tickets
+    - days_since_last_activity
+
+  # Split configuration
+  train_ratio: 0.7
+  validation_ratio: 0.15
+  stratify: true  # Stratified split for imbalanced classes
+
+features:
+  # Numeric feature handling
+  numeric_impute_strategy: median
+  numeric_scaling: standard  # Options: standard, minmax, robust, null
+
+  # Categorical feature handling
+  categorical_impute_strategy: most_frequent
+  categorical_encoding: onehot  # Options: onehot, label
+  handle_unknown: ignore  # Handle unseen categories at inference
+
+model:
+  model_type: xgboost  # Options: logistic_regression, random_forest, xgboost, lightgbm
+  hyperparameters:
+    n_estimators: 200
+    max_depth: 6
+    learning_rate: 0.05
+    subsample: 0.8
+    colsample_bytree: 0.8
+    scale_pos_weight: 3  # Handle class imbalance
+
+  # Training settings
+  cross_validation: true
+  cv_folds: 5
+  early_stopping: true
+  early_stopping_rounds: 30
+  random_state: 42
+
+mlflow:
+  # Experiment tracking
+  experiment_name: /Experiments/churn-prediction
+  run_name: xgboost-baseline  # Optional, auto-generated if not specified
+
+  # Tagging for filtering
+  tags:
+    project: customer-analytics
+    team: data-science
+    version: "1.0"
+
+  # Artifact logging
+  log_model: true
+  log_feature_importance: true
+
+  # Model registry (optional)
+  register_model: false
+  model_name: churn-prediction-model
+
+# Output path for predictions (optional)
+output_path: outputs/churn_predictions

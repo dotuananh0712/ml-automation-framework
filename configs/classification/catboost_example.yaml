@@ -1,0 +1,73 @@
+# CatBoost Classification Pipeline Configuration
+# This config demonstrates using CatBoost for classification with native categorical handling
+
+name: catboost_classification_example
+description: Classification using CatBoost with optimal hyperparameters
+pipeline_type: classification
+
+data:
+  # Data source - supports local paths, DBFS, or Unity Catalog tables
+  source: "data/classification_dataset.parquet"  # Local
+  # source: "dbfs:/mnt/data/dataset"  # Databricks DBFS
+  # source: "ml_catalog.schema.training_data"  # Unity Catalog
+  format: parquet
+
+  # Target and features
+  target_column: target
+  feature_columns: null  # Auto-detect all columns except target
+
+  # Split configuration
+  train_ratio: 0.7
+  validation_ratio: 0.15
+  stratify: true
+
+features:
+  # Numeric feature handling
+  numeric_impute_strategy: median
+  numeric_scaling: standard
+
+  # Categorical feature handling
+  # Note: CatBoost has native categorical support, but preprocessing still applies
+  categorical_impute_strategy: most_frequent
+  categorical_encoding: onehot
+  handle_unknown: ignore
+
+model:
+  model_type: catboost
+  hyperparameters:
+    # CatBoost uses 'iterations' instead of 'n_estimators'
+    iterations: 500
+    # CatBoost uses 'depth' instead of 'max_depth'
+    depth: 8
+    learning_rate: 0.03
+    # Regularization
+    l2_leaf_reg: 3
+    # Subsampling
+    subsample: 0.8
+    # CatBoost-specific: helps with imbalanced classes
+    auto_class_weights: Balanced
+    # Reduce overfitting
+    random_strength: 1.0
+    # GPU training (if available)
+    # task_type: GPU
+
+  # Training settings
+  cross_validation: true
+  cv_folds: 5
+  early_stopping: true
+  early_stopping_rounds: 50
+  random_state: 42
+
+mlflow:
+  experiment_name: /Experiments/catboost-classification
+  run_name: catboost-v1
+
+  tags:
+    model_type: catboost
+    framework: gradient_boosting
+
+  log_model: true
+  log_feature_importance: true
+  register_model: false
+
+output_path: outputs/catboost_predictions

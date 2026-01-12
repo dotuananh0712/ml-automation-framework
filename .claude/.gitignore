@@ -1,0 +1,6 @@
+# Local settings (not shared)
+settings.local.json
+user-team-info.json
+
+# Task tracking
+tasks/

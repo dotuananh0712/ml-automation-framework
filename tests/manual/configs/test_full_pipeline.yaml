@@ -1,0 +1,58 @@
+# Full Feature Pipeline Test
+# Tests: All new features combined
+
+name: manual_test_full_pipeline
+description: Classification with validation, SHAP, and tuning
+pipeline_type: classification
+
+data:
+  source: tests/manual/data/churn_train.parquet
+  format: parquet
+  target_column: churn
+  feature_columns:
+    - age
+    - tenure_months
+    - monthly_charges
+    - total_charges
+  train_ratio: 0.7
+  validation_ratio: 0.15
+  stratify: true
+
+features:
+  numeric_impute_strategy: median
+  numeric_scaling: standard
+  categorical_encoding: onehot
+
+# Data validation
+data_validation:
+  enabled: true
+  fail_on_error: true
+  min_rows: 100
+  expectations:
+    - column: age
+      expectation: expect_column_values_to_not_be_null
+    - column: age
+      expectation: expect_column_values_to_be_between
+      kwargs:
+        min_value: 0
+        max_value: 120
+
+model:
+  model_type: xgboost
+  hyperparameters:
+    n_estimators: 50
+    max_depth: 4
+    learning_rate: 0.1
+
+# SHAP explainability
+explainability:
+  enabled: true
+  explainer_type: tree
+  max_samples: 200
+  generate_summary_plot: true
+  generate_bar_plot: true
+
+mlflow:
+  experiment_name: /manual_tests/full_pipeline
+  log_model: true
+  log_feature_importance: true

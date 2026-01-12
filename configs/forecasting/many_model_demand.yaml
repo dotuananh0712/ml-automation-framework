@@ -1,0 +1,76 @@
+# Many-Model Demand Forecasting Configuration
+# Train individual models per store/product for demand forecasting
+
+name: many_model_demand_forecast
+description: Train separate forecasting models per store using local statistical models
+pipeline_type: forecasting
+
+# Many-model settings
+many_model:
+  enabled: true
+  group_column: store_id  # Column identifying individual time series
+  parallel_backend: spark  # Options: spark, sequential
+
+data:
+  source: "data/demand_history.parquet"
+  # source: "ml_catalog.demand.training_data"  # Unity Catalog
+  format: parquet
+
+  # Time series columns
+  target_column: daily_demand
+  date_column: date
+  id_column: store_id
+
+  # Split configuration (chronological for time series)
+  train_ratio: 0.8
+  validation_ratio: 0.1
+  stratify: false  # Must be false for time series
+
+features:
+  numeric_impute_strategy: median
+  numeric_scaling: null  # Tree/statistical models don't need scaling
+  categorical_encoding: onehot
+
+# Backtesting configuration
+backtest:
+  backtest_length: 90      # Days of historical data for evaluation
+  prediction_length: 14    # Forecast horizon
+  stride: 7                # Step between backtest trials
+  frequency: D             # H=hourly, D=daily, W=weekly, M=monthly
+
+# Model selection - choose one or more
+active_models:
+  - StatsForecastAutoARIMA
+  - StatsForecastAutoETS
+  # - NeuralForecastNBEATS    # Global model (requires GPU)
+  # - ChronosT5Small          # Foundation model
+
+# Model-specific hyperparameters (override defaults)
+models:
+  StatsForecastAutoARIMA:
+    hyperparameters:
+      season_length: 7      # Weekly seasonality
+      approximation: true   # Faster for large datasets
+
+  StatsForecastAutoETS:
+    hyperparameters:
+      season_length: 7
+      damped: true
+
+mlflow:
+  experiment_name: /Experiments/demand-forecasting
+  tags:
+    project: demand-planning
+    pipeline: many-model
+    frequency: daily
+  log_model: true
+  log_feature_importance: false  # Not applicable for statistical models
+
+# Data quality thresholds
+data_quality:
+  min_rows_per_group: 100   # Minimum history per store
+  max_missing_ratio: 0.1    # Maximum 10% missing values
+  max_negative_ratio: 0.05  # Maximum 5% negative demand
+
+# Output settings
+output_path: outputs/demand_forecasts

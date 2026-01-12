@@ -1,0 +1,51 @@
+# Sales Forecasting Pipeline Configuration
+# Time series forecasting for daily sales prediction
+
+name: daily_sales_forecast
+description: Forecast daily sales using historical data and lag features
+pipeline_type: forecasting
+
+data:
+  source: "data/sales_history.parquet"
+  format: parquet
+
+  # Target and time column
+  target_column: daily_sales
+  date_column: date
+  id_column: store_id  # Optional: for multi-series forecasting
+
+  # Time-based split (chronological, not random)
+  train_ratio: 0.8
+  validation_ratio: 0.1
+  stratify: false  # Must be false for time series
+
+features:
+  numeric_impute_strategy: median
+  numeric_scaling: null  # Tree models don't need scaling
+  categorical_encoding: onehot
+
+model:
+  model_type: lightgbm
+  hyperparameters:
+    n_estimators: 500
+    max_depth: 8
+    learning_rate: 0.03
+    num_leaves: 64
+    min_child_samples: 20
+    reg_alpha: 0.1
+    reg_lambda: 0.1
+
+  cross_validation: false  # Use time-based validation instead
+  early_stopping: true
+  early_stopping_rounds: 50
+  random_state: 42
+
+mlflow:
+  experiment_name: /Experiments/sales-forecasting
+  tags:
+    project: demand-planning
+    forecast_horizon: daily
+  log_model: true
+  log_feature_importance: true
+
+output_path: outputs/sales_forecast

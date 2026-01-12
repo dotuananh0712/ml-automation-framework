@@ -1,0 +1,37 @@
+# Basic Training Pipeline - Test Case 1
+# Tests: Basic training without new features
+
+name: manual_test_basic_train
+description: Basic classification training test
+pipeline_type: classification
+
+data:
+  source: tests/manual/data/churn_train.parquet
+  format: parquet
+  target_column: churn
+  feature_columns:
+    - age
+    - tenure_months
+    - monthly_charges
+    - total_charges
+  train_ratio: 0.7
+  validation_ratio: 0.15
+
+features:
+  numeric_impute_strategy: median
+  numeric_scaling: standard
+  categorical_encoding: onehot
+
+model:
+  model_type: xgboost
+  hyperparameters:
+    n_estimators: 50
+    max_depth: 4
+    learning_rate: 0.1
+  cross_validation: true
+  cv_folds: 3
+
+mlflow:
+  experiment_name: /manual_tests/basic_train
+  log_model: true
+  log_feature_importance: true

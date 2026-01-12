@@ -1,0 +1,37 @@
+# SHAP Explainability Test - Test Case 5
+# Tests: SHAP explanation generation
+
+name: manual_test_shap
+description: Classification with SHAP explainability
+pipeline_type: classification
+
+data:
+  source: tests/manual/data/churn_train.parquet
+  format: parquet
+  target_column: churn
+  feature_columns:
+    - age
+    - tenure_months
+    - monthly_charges
+    - total_charges
+  train_ratio: 0.8
+  validation_ratio: 0.1
+
+model:
+  model_type: xgboost
+  hyperparameters:
+    n_estimators: 50
+    max_depth: 4
+
+explainability:
+  enabled: true
+  explainer_type: auto
+  max_samples: 200
+  generate_summary_plot: true
+  generate_bar_plot: true
+  generate_dependence_plots: false
+
+mlflow:
+  experiment_name: /manual_tests/with_shap
+  log_model: true
+  log_feature_importance: true
